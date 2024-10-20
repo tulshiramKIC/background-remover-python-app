@@ -105,7 +105,7 @@ docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
 pipeline {
     agent any
     environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+        SCANNER_HOME = tool 'sonar'
     }
     stages {
         stage ("Clean workspace") {
@@ -120,7 +120,7 @@ pipeline {
         }
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('sonar-server') {
+                withSonarQubeEnv('sonar') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=background-remover-python-app \
                     -Dsonar.projectKey=background-remover-python-app '''
                 }
@@ -129,7 +129,7 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar'
                 }
             }
         }
@@ -153,8 +153,8 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker') {
-                        sh "docker tag background-remover-python-app amonkincloud/background-remover-python-app:latest"
-                        sh "docker push amonkincloud/background-remover-python-app:latest"
+                        sh "docker tag background-remover-python-app tdk785/background-remover-python-app:latest"
+                        sh "docker push tdk785/background-remover-python-app:latest"
                     }
                 }
             }
@@ -163,16 +163,16 @@ pipeline {
             steps {
                 script {
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                       sh 'docker-scout quickview amonkincloud/background-remover-python-app:latest'
-                       sh 'docker-scout cves amonkincloud/background-remover-python-app:latest'
-                       sh 'docker-scout recommendations amonkincloud/background-remover-python-app:latest'
+                       sh 'docker-scout quickview tdk785/background-remover-python-app:latest'
+                       sh 'docker-scout cves tdk785/background-remover-python-app:latest'
+                       sh 'docker-scout tdk785 amonkincloud/background-remover-python-app:latest'
                    }
                 }
             }
         }
         stage ("Deploy to Container") {
             steps {
-                sh 'docker run -d --name background-remover-python-app -p 5100:5100 amonkincloud/background-remover-python-app:latest'
+                sh 'docker run -d --name background-remover-python-app -p 5100:5100 tdk785/background-remover-python-app:latest'
             }
         }
     }
